@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV/Excel Merger - LinkedIn Data Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-layer-group"></i>
+                <h1>CSV/Excel Merger</h1>
+            </div>
+            <p class="subtitle">Unisci i tuoi file CSV/Excel da LinkedIn senza duplicati</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Step 1: Upload Files -->
+            <section class="card upload-section">
+                <div class="card-header">
+                    <span class="step-number">1</span>
+                    <h2>Carica i File</h2>
+                </div>
+                <div class="card-body">
+                    <div class="upload-zone" id="uploadZone">
+                        <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                        <p>Trascina qui i file CSV/Excel</p>
+                        <span class="upload-hint">oppure</span>
+                        <label class="btn btn-primary upload-btn">
+                            <i class="fas fa-folder-open"></i> Sfoglia
+                            <input type="file" id="fileInput" multiple accept=".csv,.xlsx,.xls" hidden>
+                        </label>
+                        <p class="file-types">Formati supportati: CSV, XLSX, XLS</p>
+                    </div>
+                    
+                    <!-- File List -->
+                    <div class="file-list" id="fileList" style="display: none;">
+                        <div class="file-list-header">
+                            <h3><i class="fas fa-files"></i> File Caricati</h3>
+                            <button class="btn btn-sm btn-danger" id="clearFilesBtn">
+                                <i class="fas fa-trash"></i> Rimuovi tutti
+                            </button>
+                        </div>
+                        <div class="file-items" id="fileItems"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Step 2: Configure Merge -->
+            <section class="card config-section" id="configSection" style="display: none;">
+                <div class="card-header">
+                    <span class="step-number">2</span>
+                    <h2>Configura il Merge</h2>
+                </div>
+                <div class="card-body">
+                    <div class="config-grid">
+                        <!-- Deduplication Options -->
+                        <div class="config-group">
+                            <h3><i class="fas fa-filter"></i> Deduplicazione</h3>
+                            <div class="toggle-option">
+                                <label class="toggle">
+                                    <input type="checkbox" id="removeDuplicates" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                                <span>Rimuovi duplicati</span>
+                                <i class="fas fa-info-circle tooltip-icon" 
+                                   title="Evita che lo stesso contatto appaia più volte nel file finale"></i>
+                            </div>
+                            <div class="toggle-option">
+                                <label class="toggle">
+                                    <input type="checkbox" id="autoDetect" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                                <span>Auto-rileva colonne chiave LinkedIn</span>
+                                <i class="fas fa-info-circle tooltip-icon" 
+                                   title="Rileva automaticamente Profile URL, Email o Nome come chiave univoca"></i>
+                            </div>
+                        </div>
+
+                        <!-- Key Columns Selection -->
+                        <div class="config-group" id="keyColumnsGroup" style="display: none;">
+                            <h3><i class="fas fa-key"></i> Colonne Chiave per Deduplicazione</h3>
+                            <p class="help-text">Seleziona le colonne da usare per identificare i duplicati:</p>
+                            <div class="columns-select" id="columnsSelect"></div>
+                        </div>
+
+                        <!-- Output Format -->
+                        <div class="config-group">
+                            <h3><i class="fas fa-file-export"></i> Formato Output</h3>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="outputFormat" value="csv" checked>
+                                    <span class="radio-label">
+                                        <i class="fas fa-file-csv"></i> CSV
+                                    </span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="outputFormat" value="xlsx">
+                                    <span class="radio-label">
+                                        <i class="fas fa-file-excel"></i> Excel (XLSX)
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Merge Button -->
+                    <div class="merge-actions">
+                        <button class="btn btn-primary btn-lg" id="mergeBtn">
+                            <i class="fas fa-magic"></i> Esegui Merge
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Step 3: Results -->
+            <section class="card results-section" id="resultsSection" style="display: none;">
+                <div class="card-header">
+                    <span class="step-number">3</span>
+                    <h2>Risultato</h2>
+                </div>
+                <div class="card-body">
+                    <!-- Stats -->
+                    <div class="stats-grid" id="statsGrid">
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-file-alt"></i></div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="statFilesProcessed">0</span>
+                                <span class="stat-label">File processati</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fas fa-database"></i></div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="statRowsBefore">0</span>
+                                <span class="stat-label">Righe totali</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon warning"><i class="fas fa-copy"></i></div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="statDuplicates">0</span>
+                                <span class="stat-label">Duplicati rimossi</span>
+                            </div>
+                        </div>
+                        <div class="stat-card success">
+                            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                            <div class="stat-info">
+                                <span class="stat-value" id="statFinalRows">0</span>
+                                <span class="stat-label">Righe finali</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Key Columns Used -->
+                    <div class="key-columns-info" id="keyColumnsInfo"></div>
+
+                    <!-- Preview Table -->
+                    <div class="preview-section">
+                        <h3><i class="fas fa-table"></i> Anteprima (prime 10 righe)</h3>
+                        <div class="table-container">
+                            <table class="preview-table" id="previewTable">
+                                <thead id="previewHead"></thead>
+                                <tbody id="previewBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Download Actions -->
+                    <div class="download-actions">
+                        <button class="btn btn-success btn-lg" id="downloadBtn">
+                            <i class="fas fa-download"></i> Scarica File Mergato
+                        </button>
+                        <button class="btn btn-secondary" id="newMergeBtn">
+                            <i class="fas fa-redo"></i> Nuovo Merge
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- History Section -->
+            <section class="card history-section">
+                <div class="card-header collapsible" id="historyHeader">
+                    <h2><i class="fas fa-history"></i> Cronologia Merge</h2>
+                    <i class="fas fa-chevron-down collapse-icon"></i>
+                </div>
+                <div class="card-body history-body" id="historyBody" style="display: none;">
+                    <div class="history-list" id="historyList">
+                        <p class="empty-history">Nessun file mergato ancora.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>CSV/Excel Merger App &copy; 2024 - Ottimizzato per dati LinkedIn</p>
+        </footer>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Elaborazione in corso...</p>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

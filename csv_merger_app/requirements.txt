@@ -1,0 +1,15 @@
+# CSV/Excel Merger App - Dipendenze Python
+# Installa con: pip install -r requirements.txt
+
+# Framework web
+flask>=2.3.0
+
+# Elaborazione dati
+pandas>=2.0.0
+
+# Supporto Excel
+openpyxl>=3.1.0
+xlrd>=2.0.0
+
+# Utilità
+werkzeug>=2.3.0
