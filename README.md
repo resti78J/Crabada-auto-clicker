@@ -1,18 +1,57 @@
-![alt text](https://github.com/EDavis66/crabada-auto-clicker/blob/main/Untitled.png?raw=true)
+# LinkedIn CSV/Excel Merge Utility
 
-Auto mining and looting bot for nft-game Crabada. Use [2captcha](https://2captcha.com/) API key to bypass captcha.  Written in .Net using Windows API.
+Script locale per unire rapidamente gli export CSV/XLSX di LinkedIn mantenendo ogni ondata di download separata dalle precedenti. Ogni esecuzione genera un file con timestamp e un file di metadati, così puoi archiviare e ritrovare i merge effettuati senza sovrascrivere quelli vecchi.
 
-### How it works
-Full auto clicker bot for Crabada. Script uses pixel scanning via WinAPI functions to find valid pixels on you screen. Then it emulates mouse moving to click on valid buttons in browser window.
+## Requisiti
+- Python 3.10 o superiore
+- `pip` per installare le dipendenze elencate in `requirements.txt`
 
-### Updates
-- Jan 2022: First release
-- March 2022: Captcha bypass added ([2captcha](https://2captcha.com/) API key)
+Installa le dipendenze una sola volta:
 
-### Setup
-- [Download](https://github.com/EDavis66/crabada-auto-clicker/archive/refs/heads/main.zip) repository and extract files with password `9InkwZWOENdE`
-- Launch browser in fullscreen mode (F11)
-- Launch bot with mode you need
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
 
-### Copyright
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. CRABADA NFT BOT, CRABADA BOT, CRABADA, CRABADA CLICKER, CRABADA FARM BOT, CRABADA AUTO BOT, CRABADA AUTO CLICKER, AVALANCHE *
+## Uso rapido
+1. Scarica manualmente i CSV (o XLSX) da LinkedIn e mettili in una cartella, ad esempio `imports/2025-12-10/`.
+2. Avvia il merge assegnando un tag univoco alla “tranche” di download:
+
+```bash
+python merge_linkedin_exports.py imports/2025-12-10 --tag prima_tranche
+```
+
+3. Troverai l’output in `merged_runs/20251210-153045_prima_tranche.xlsx` (più un JSON con i metadati). I file precedenti restano intatti perché ogni run ha un nome diverso grazie al timestamp + tag.
+
+## Opzioni principali
+- `inputs`: uno o più file/cartelle. Con `--recursive` la cartella viene esplorata in profondità.
+- `--tag`: etichetta per ricordare la provenienza (es. `settimana42`, `lead-milano`).
+- `--output-dir`: dove salvare i merge (default: `merged_runs`).
+- `--output-format`: `xlsx` (default) o `csv`.
+- `--sheet-name`: nome del foglio se esporti in XLSX.
+- `--encoding` e `--delimiter`: utili se i CSV usano separatori/charset diversi.
+- `--dedupe-on col1 col2`: elimina i duplicati considerando solo certe colonne.
+
+Esempio completo:
+
+```bash
+python merge_linkedin_exports.py \\
+  inputs/settimana-50 \\
+  --recursive \\
+  --tag settimana_50 \\
+  --output-format xlsx \\
+  --dedupe-on \"Email Address\" \"First Name\"
+```
+
+## Cosa produce
+- File dati (`.xlsx` o `.csv`) con tutte le righe normalizzate (colonne mancanti riempite con celle vuote) e colonna `_source_file` per sapere da quale export proviene ogni riga.
+- File JSON di metadati con conteggio righe, elenco file usati e dedupe applicato. Puoi archiviarlo o caricarlo in strumenti di tracking.
+
+## Flusso di lavoro consigliato
+1. Scarica i nuovi export LinkedIn in una cartella nominata per data o campagna.
+2. Lancia il merge indicando un nuovo `--tag`. Il timestamp automatico ti evita collisioni.
+3. Subito dopo il merge, carica il file risultante dove ti serve (CRM, Google Sheets, ecc.).
+4. Mantieni le cartelle originali: così puoi rilanciare il merge se LinkedIn cambia struttura colonne.
+
+In questo modo i download successivi non vanno a contaminare quelli precedenti: restano separati sia negli input (cartelle diverse) sia negli output (file timestampati). *** End Patch
